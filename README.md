@@ -7,11 +7,13 @@ http://cryptopals.com/
 
 - [x] [Convert hex to base64](http://cryptopals.com/sets/1/challenges/1)
 - [x] [Fixed XOR](http://cryptopals.com/sets/1/challenges/2)
-- [ ] [Single-byte XOR cipher](http://cryptopals.com/sets/1/challenges/3)
+- [x] [Single-byte XOR cipher](http://cryptopals.com/sets/1/challenges/3)
+- [ ] [Detect single-character XOR](http://cryptopals.com/sets/1/challenges/4)
 
 ## TODO
 
-- [ ] Extract `hex` module into it's own file
+- [x] Extract `hex` module into it's own file
+- [ ] Extract frequency analysis data into file and code gen at build time
 
 ## Notes
 
@@ -42,5 +44,41 @@ which prompted me to do some actual grepping.
     89  Ok("Cooking MC\'s like a pound of bacon")
 ```
 
-Bingo! 
+Bingo!
 Now I have a test case for implementing [frequency analysis](https://en.wikipedia.org/wiki/Frequency_analysis).
+
+#### Frequency Analysis
+
+In order to automatically detect the correct key, choose a key, decrypt the message with that key,
+then run a [chi-squared test][chi-squared] on the [frequency analysis][freq-analysis] on the decypted message.
+
+For the frequency analysis, I need to find a dataset that includes the space character in the analysis. 
+
+[chi-squared]: https://en.wikipedia.org/wiki/Chi-squared_test
+[freq-analysis]: https://en.wikipedia.org/wiki/Frequency_analysis
+
+**Chi-squared:**
+
+χ^2 =  Σ( (observed - expected) ^ 2 / expected)
+
+⍺ = 0.05 = 5% (significance factor, can be adjusted as needed)
+
+if χ^2 > ⍺, then it is likely we have an English sentence, and therefore have found the key.
+
+Chi squared cannot work on percentages, so I first need to turn the expected % into an expected count based on the message length.
+
+**Psuedo code:**
+
+expected_counts = 
+	expected_percentages.map(|e| -> e * message.length())
+
+acutal_counts = decrypted_message.group_by(char, sum)
+
+distributions = expected_counts.zip(actual_counts.sort_by_value())
+
+chi-statistic = distributions.map(|expected, observed| -> (observed - expected) ^ 2 / expected).sum
+
+P = chi-distribution-table.lookup(chi-statistic)
+
+return P > ⍺
+
