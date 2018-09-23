@@ -9,10 +9,10 @@ fn main() {
     let secret =
         hex::to_bytes("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736");
 
-    println!("{:?}", crack(&secret));
+    println!("{:?}", crack_xor(&secret));
 }
 
-fn crack(cipher: &[u8]) -> Vec<String> {
+fn crack_xor(cipher: &[u8]) -> Vec<String> {
     let alphabet = 0..255u8; /* ascii/utf-8 range */
 
     alphabet
@@ -38,7 +38,7 @@ mod tests {
         let secret =
             hex::to_bytes("1b37373331363f78151b7f2b783431333d78397828372d363c78373e783a393b3736");
 
-        let actual = crack(&secret);
+        let actual = crack_xor(&secret);
 
         assert_eq!(vec!["Cooking MC's like a pound of bacon"], actual);
     }
