@@ -1,28 +1,9 @@
 use std::collections::HashMap;
 
-/// Frequecy as a percentage of total.
-/// Example: 12.23% is `Frequency(12.23)`
-struct Frequency {
-    percentage: f32,
-}
-
-impl Frequency {
-    fn new(percentage: &f32) -> Frequency {
-        Frequency {
-            percentage: *percentage,
-        }
-    }
-
-    fn expected_count(&self, message_length: usize) -> f32 {
-        (self.percentage / 100.0) * (message_length as f32)
-    }
-}
-
 pub fn english(message: &str) -> bool {
     let expected_counts: HashMap<char, f32> = frequencies()
         .iter()
-        .map(|(k, freq)| (k, Frequency::new(freq)))
-        .map(|(k, freq)| (k.clone() as char, freq.expected_count(message.len())))
+        .map(|(k, freq)| (k.clone() as char, (freq / 100.0) * (message.len() as f32)))
         .collect();
 
     let actual_counts = message
@@ -37,23 +18,10 @@ pub fn english(message: &str) -> bool {
             acc
         });
 
-    let chi_statistic: f32 = actual_counts
-        .into_iter()
-        .map(|(key, obs)| {
-            let exp = match expected_counts.get(&key) {
-                Some(x) => x.clone() as f32,
-                None => Frequency::new(&0.0001).expected_count(message.len()), //non-zero, but tiny possibility
-            };
-
-            let result = (obs as f32 - exp).powi(2) / exp;
-            if cfg!(debug_assertions) {
-                println!(
-                    "char: {}\tobserved: {:.6}\texpected: {:.12}\tcurrent: {:.6}",
-                    key, obs, exp, result
-                );
-            }
-            result
-        }).sum();
+    let chi_statistic = chi_statistic(actual_counts, expected_counts);
+    if cfg!(debug_assertions) {
+        println!("X-statistic: {}", chi_statistic);
+    }
 
     //  Degrees of freedom = 256 - 1 = 255 (character space)
     //  Usign this table:
@@ -63,15 +31,34 @@ pub fn english(message: &str) -> bool {
     //  If our chi_statistic is < the critical_value, then we have a match.
     //  See this page for an explanation:
     //  https://en.wikipedia.org/wiki/Chi-squared_distribution#Table_of_%CF%872_values_vs_p-values
-    if cfg!(debug_assertions) {
-        println!("X-statistic: {}", chi_statistic);
-    }
     chi_statistic < 287.882
 }
 
+/// Calculates Pearson's Cumulative Chi Statistic
+/// https://en.wikipedia.org/wiki/Pearson%27s_chi-squared_test#Calculating_the_test-statistic
+///
+/// This is a slight variation.
+/// Technichally, if the expected value is zero and the actual is non-zero, then the statistic is infinite.
+/// For the sake of ergonommics, this implementation assumes missing expected values to be small, but non-zero.
+/// This allows us to only specify values in the expected frequencies that are statistically
+/// significant while allowing for all valid utf-8 characters in the message.
+fn chi_statistic(observed: HashMap<char, isize>, expected: HashMap<char, f32>) -> f32 {
+    observed
+        .into_iter()
+        .map(|(key, obs)| {
+            let exp = match expected.get(&key) {
+                Some(x) => x.clone() as f32,
+                None => 0.0000001, //non-zero, but tiny possibility
+            };
+
+            (obs as f32 - exp).powi(2) / exp
+        }).sum()
+}
+
+/// Letter frequency taken from this dataset.
+/// http://www.fitaly.com/board/domper3/posts/136.html
 fn frequencies() -> HashMap<u8, f32> {
-    // Taken from this dataset http://www.fitaly.com/board/domper3/posts/136.html
-    // Use some code gen to clean this up
+    // TODO: Use some code gen to clean this up
     // https://doc.rust-lang.org/cargo/reference/build-scripts.html#case-study-code-generation
     [
         (32, 17.1660),
