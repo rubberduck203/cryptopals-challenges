@@ -1,9 +1,28 @@
 use std::collections::HashMap;
 
+/// Frequecy as a percentage of total.
+/// Example: 12.23% is `Frequency(12.23)`
+struct Frequency {
+    percentage: f32,
+}
+
+impl Frequency {
+    fn new(percentage: &f32) -> Frequency {
+        Frequency {
+            percentage: *percentage,
+        }
+    }
+
+    fn expected_count(&self, message_length: usize) -> f32 {
+        (self.percentage / 100.0) * (message_length as f32)
+    }
+}
+
 pub fn english(message: &str) -> bool {
     let expected_counts: HashMap<char, f32> = frequencies()
         .iter()
-        .map(|(k, freq)| (k.clone() as char, ((freq / 100.0) * message.len() as f32)))
+        .map(|(k, freq)| (k, Frequency::new(freq)))
+        .map(|(k, freq)| (k.clone() as char, freq.expected_count(message.len())))
         .collect();
 
     let actual_counts = message
@@ -23,7 +42,7 @@ pub fn english(message: &str) -> bool {
         .map(|(key, obs)| {
             let exp = match expected_counts.get(&key) {
                 Some(x) => x.clone() as f32,
-                None => 0.000001 * message.len() as f32, //non-zero, but tiny possibility
+                None => Frequency::new(&0.0001).expected_count(message.len()), //non-zero, but tiny possibility
             };
 
             let result = (obs as f32 - exp).powi(2) / exp;
