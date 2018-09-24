@@ -1,8 +1,7 @@
 extern crate base64;
-use self::base64::encode;
 
 pub fn to_base64(hex: &str) -> String {
-    encode(&to_bytes(hex))
+    base64::encode(&to_bytes(hex))
 }
 
 pub fn to_bytes(hex: &str) -> Vec<u8> {
