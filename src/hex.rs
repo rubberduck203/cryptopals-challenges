@@ -6,6 +6,11 @@ pub fn to_base64(hex: &str) -> String {
 }
 
 pub fn to_bytes(hex: &str) -> Vec<u8> {
+    assert!(
+        hex.len() % 2 == 0,
+        "Hex strings must have an even number of characters."
+    );
+
     hex.as_bytes()
         .chunks(2) // each char represents one nibble
         .map(|nibbles| str::from_utf8(&nibbles).unwrap())
@@ -43,5 +48,11 @@ mod tests {
     fn multibyte_hex_string_to_byte_vector() {
         let hex = "2ABE";
         assert_eq!(vec![0x2A, 0xBE], to_bytes(hex));
+    }
+
+    #[test]
+    #[should_panic]
+    fn odd_length_string_is_not_hex() {
+        to_bytes("2AC");
     }
 }
