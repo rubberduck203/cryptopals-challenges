@@ -1,16 +1,16 @@
 extern crate base64;
+use std::str;
 
 pub fn to_base64(hex: &str) -> String {
     base64::encode(&to_bytes(hex))
 }
 
 pub fn to_bytes(hex: &str) -> Vec<u8> {
-    hex.chars()
-            .collect::<Vec<_>>() //convert to slice-able
-            .chunks(2)           //each char is one nibble
-            .map(|byte| byte.iter().collect::<String>())
-            .map(|byte| u8::from_str_radix(&byte[..], 16).unwrap())
-            .collect()
+    hex.as_bytes()
+        .chunks(2) // each char represents one nibble
+        .map(|nibbles| str::from_utf8(&nibbles).unwrap())
+        .map(|s| u8::from_str_radix(s, 16).unwrap())
+        .collect::<Vec<u8>>()
 }
 
 #[cfg(test)]
