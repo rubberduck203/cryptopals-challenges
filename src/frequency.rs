@@ -20,8 +20,10 @@ pub fn english(message: &str) -> bool {
             acc
         });
 
-    let chi_statistic = chi_statistic(actual_counts, expected_counts);
+    let chi_statistic = chi_statistic(&actual_counts, &expected_counts);
     if cfg!(debug_assertions) {
+        println!("Expected: {:#?}", expected_counts);
+        println!("Actual: {:#?}", actual_counts);
         println!("X-statistic: {}", chi_statistic);
     }
 
@@ -44,7 +46,7 @@ pub fn english(message: &str) -> bool {
 /// For the sake of ergonommics, this implementation assumes missing expected values to be small, but non-zero.
 /// This allows us to only specify values in the expected frequencies that are statistically
 /// significant while allowing for all valid utf-8 characters in the message.
-fn chi_statistic(observed: HashMap<char, isize>, expected: HashMap<char, f32>) -> f32 {
+fn chi_statistic(observed: &HashMap<char, isize>, expected: &HashMap<char, f32>) -> f32 {
     observed
         .into_iter()
         .map(|(key, obs)| {
@@ -53,7 +55,7 @@ fn chi_statistic(observed: HashMap<char, isize>, expected: HashMap<char, f32>) -
                 None => 0.0000001, //non-zero, but tiny possibility
             };
 
-            (obs as f32 - exp).powi(2) / exp
+            (*obs as f32 - exp).powi(2) / exp
         }).sum()
 }
 
@@ -64,6 +66,12 @@ mod tests {
     #[test]
     fn bacon_message_is_english() {
         let message = "Cooking MC's like a pound of bacon";
+        assert!(english(message));
+    }
+
+    #[test]
+    fn message_with_new_line_is_english() {
+        let message = "Now that the party is jumping\n";
         assert!(english(message));
     }
 

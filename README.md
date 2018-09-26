@@ -8,12 +8,14 @@ http://cryptopals.com/
 - [x] [Convert hex to base64](http://cryptopals.com/sets/1/challenges/1)
 - [x] [Fixed XOR](http://cryptopals.com/sets/1/challenges/2)
 - [x] [Single-byte XOR cipher](http://cryptopals.com/sets/1/challenges/3)
-- [ ] [Detect single-character XOR](http://cryptopals.com/sets/1/challenges/4)
+- [x] [Detect single-character XOR](http://cryptopals.com/sets/1/challenges/4)
+- [ ] [Implement repeating-key XOR](http://cryptopals.com/sets/1/challenges/5)
 
 ## TODO
 
 - [x] Extract `hex` module into it's own file
 - [x] Extract frequency analysis data into file and code gen at build time
+- [ ] Find a better dataset. Even if it means doing my own analysis.
 
 ## Frequency Analysis Data
 
